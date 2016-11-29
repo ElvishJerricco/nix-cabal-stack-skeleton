@@ -1,12 +1,8 @@
 { pkgs ? import <nixpkgs> {}
-, ghc ? null }:
+, haskellPackages ? pkgs.haskellPackages }:
 
-let haskellPackages = if ghc == null
-      then pkgs.haskellPackages
-      else pkgs.haskellPackages.override { overrides = (self: super: { ghc = ghc; }); };
-
-    overrideCabal = pkg: pkgs.haskell.lib.overrideCabal pkg ({ buildDepends ? [], ... }: {
-      buildDepends = buildDepends ++ [ pkgs.cabal-install haskellPackages.intero ];
+let overrideCabal = pkg: pkgs.haskell.lib.overrideCabal pkg ({ buildDepends ? [], ... }: {
+      buildDepends = buildDepends ++ [ pkgs.cabal-install ];
     });
 
 in (overrideCabal (import ./default.nix { inherit pkgs haskellPackages; })).env
