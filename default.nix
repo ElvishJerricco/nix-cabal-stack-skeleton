@@ -5,8 +5,18 @@ let haskellOverrides = self: super: {
 #      somePackage = self.callHackage "somePackage" "0.version.bump.0" {};
     };
     hp = haskellPackages.override { overrides = haskellOverrides; };
+    cabal2nixResult = src: pkgs.runCommand "cabal2nixResult" {
+      buildCommand = ''
+        cabal2nix file://"${src}" >"$out"
+      '';
+      buildInputs = [ pkgs.cabal2nix ];
 
-in pkgs.haskell.lib.overrideCabal (hp.callPackage (import ./cabal.nix) {}) (self: {
+      # Support unicode characters in cabal files
+      ${if !pkgs.stdenv.isDarwin then "LOCALE_ARCHIVE" else null} = "${pkgs.glibcLocales}/lib/locale/locale-archive";
+      ${if !pkgs.stdenv.isDarwin then "LC_ALL" else null} = "en_US.UTF-8";
+    } "";
+
+in pkgs.haskell.lib.overrideCabal (hp.callPackage (cabal2nixResult ./.) {}) (self: {
   src = builtins.filterSource (path: type:
     type != "unknown"
     && baseNameOf path != ".git"
