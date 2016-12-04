@@ -1,7 +1,14 @@
 { pkgs ? import <nixpkgs> {}
-, haskellPackages ? pkgs.haskellPackages}:
+, haskellPackages ? pkgs.haskellPackages
+, withHoogle ? false }:
 
-let haskellOverrides = self: super: {
+let haskellOverrides = self: super:
+    ( if withHoogle
+      then {
+        ghc = super.ghc // { withPackages = super.ghc.withHoogle; };
+        ghcWithPackages = self.ghc.withPackages;
+      } else {}
+    ) // {
 #      somePackage = self.callHackage "somePackage" "0.version.bump.0" {};
     };
     hp = haskellPackages.override { overrides = haskellOverrides; };
